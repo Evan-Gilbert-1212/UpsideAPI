@@ -11,14 +11,19 @@ namespace UpsideAPI.Controllers
 
   public class BankAccountController : ControllerBase
   {
-    public DatabaseContext UpsideDb = new DatabaseContext();
+    private DatabaseContext _context;
+
+    public BankAccountController(DatabaseContext context)
+    {
+      _context = context;
+    }
 
     [HttpGet("{userId}")]
     public ActionResult GetUserAccounts(int userId)
     {
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(UpsideDb.BankAccounts.Where(acc => acc.UserID == userId)),
+        Content = JsonConvert.SerializeObject(_context.BankAccounts.Where(acc => acc.UserID == userId)),
         ContentType = "application/json",
         StatusCode = 200
       };
@@ -29,9 +34,9 @@ namespace UpsideAPI.Controllers
     {
       newAccount.UserID = userId;
 
-      UpsideDb.BankAccounts.Add(newAccount);
+      _context.BankAccounts.Add(newAccount);
 
-      await UpsideDb.SaveChangesAsync();
+      await _context.SaveChangesAsync();
 
       return new ContentResult()
       {

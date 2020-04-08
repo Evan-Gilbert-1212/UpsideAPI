@@ -12,14 +12,19 @@ namespace UpsideAPI.Controllers
 
   public class RevenueController : ControllerBase
   {
-    public DatabaseContext UpsideDb = new DatabaseContext();
+    private DatabaseContext _context;
+
+    public RevenueController(DatabaseContext context)
+    {
+      _context = context;
+    }
 
     [HttpGet("{userId}")]
     public ActionResult GetUserRevenues(int userId, DateTime BeginDate, DateTime EndDate)
     {
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(UpsideDb.Revenues
+        Content = JsonConvert.SerializeObject(_context.Revenues
                                                 .Where(rev =>
                                                   rev.UserID == userId
                                                   && rev.RevenueDate >= BeginDate
@@ -35,9 +40,9 @@ namespace UpsideAPI.Controllers
     {
       newRevenue.UserID = userId;
 
-      UpsideDb.Revenues.Add(newRevenue);
+      _context.Revenues.Add(newRevenue);
 
-      await UpsideDb.SaveChangesAsync();
+      await _context.SaveChangesAsync();
 
       return new ContentResult()
       {

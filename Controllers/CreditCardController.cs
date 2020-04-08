@@ -11,14 +11,19 @@ namespace UpsideAPI.Controllers
 
   public class CreditCardController : ControllerBase
   {
-    public DatabaseContext UpsideDb = new DatabaseContext();
+    private DatabaseContext _context;
+
+    public CreditCardController(DatabaseContext context)
+    {
+      _context = context;
+    }
 
     [HttpGet("{userId}")]
     public ActionResult GetUserCreditCards(int userId)
     {
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(UpsideDb.CreditCards.Where(acc => acc.UserID == userId)),
+        Content = JsonConvert.SerializeObject(_context.CreditCards.Where(acc => acc.UserID == userId)),
         ContentType = "application/json",
         StatusCode = 200
       };
@@ -29,9 +34,9 @@ namespace UpsideAPI.Controllers
     {
       newCreditCard.UserID = userId;
 
-      UpsideDb.CreditCards.Add(newCreditCard);
+      _context.CreditCards.Add(newCreditCard);
 
-      await UpsideDb.SaveChangesAsync();
+      await _context.SaveChangesAsync();
 
       return new ContentResult()
       {

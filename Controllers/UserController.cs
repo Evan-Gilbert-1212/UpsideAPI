@@ -13,14 +13,19 @@ namespace UpsideAPI.Controllers
 
   public class UserController : ControllerBase
   {
-    public DatabaseContext UpsideDb = new DatabaseContext();
+    private DatabaseContext _context;
+
+    public UserController(DatabaseContext context)
+    {
+      _context = context;
+    }
 
     [HttpGet("{userId}")]
     public ActionResult GetUser(int userId)
     {
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(UpsideDb.Users.Where(user => user.ID == userId)),
+        Content = JsonConvert.SerializeObject(_context.Users.Where(user => user.ID == userId)),
         ContentType = "application/json",
         StatusCode = 200
       };
@@ -31,15 +36,15 @@ namespace UpsideAPI.Controllers
     {
       var summary = new UserSummary();
 
-      summary.AccountBalance = UpsideDb.BankAccounts.Where(acct => acct.UserID == userId).Sum(acct => acct.AccountBalance);
-      summary.CreditCardBalance = UpsideDb.CreditCards.Where(card => card.UserID == userId).Sum(card => card.AccountBalance);
-      summary.RevenueTotal = UpsideDb.Revenues
+      summary.AccountBalance = _context.BankAccounts.Where(acct => acct.UserID == userId).Sum(acct => acct.AccountBalance);
+      summary.CreditCardBalance = _context.CreditCards.Where(card => card.UserID == userId).Sum(card => card.AccountBalance);
+      summary.RevenueTotal = _context.Revenues
                              .Where(rev =>
                                rev.UserID == userId
                                && rev.RevenueDate >= BeginDate
                                && rev.RevenueDate <= EndDate)
                              .Sum(rev => rev.RevenueAmount);
-      summary.ExpenseTotal = UpsideDb.Expenses
+      summary.ExpenseTotal = _context.Expenses
                              .Where(exp =>
                                exp.UserID == userId
                                && exp.ExpenseDate >= BeginDate
@@ -56,9 +61,9 @@ namespace UpsideAPI.Controllers
     [HttpPost]
     public async Task<ActionResult> AddUser(User newUser)
     {
-      await UpsideDb.Users.AddAsync(newUser);
+      await _context.Users.AddAsync(newUser);
 
-      await UpsideDb.SaveChangesAsync();
+      await _context.SaveChangesAsync();
 
       return new ContentResult()
       {

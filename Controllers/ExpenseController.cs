@@ -12,14 +12,19 @@ namespace UpsideAPI.Controllers
 
   public class ExpenseController : ControllerBase
   {
-    public DatabaseContext UpsideDb = new DatabaseContext();
+    private DatabaseContext _context;
+
+    public ExpenseController(DatabaseContext context)
+    {
+      _context = context;
+    }
 
     [HttpGet("{userId}")]
     public ActionResult GetUserExpenses(int userId, DateTime BeginDate, DateTime EndDate)
     {
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(UpsideDb.Expenses
+        Content = JsonConvert.SerializeObject(_context.Expenses
                                                 .Where(exp =>
                                                   exp.UserID == userId
                                                   && exp.ExpenseDate >= BeginDate
@@ -35,9 +40,9 @@ namespace UpsideAPI.Controllers
     {
       newExpense.UserID = userId;
 
-      UpsideDb.Expenses.Add(newExpense);
+      _context.Expenses.Add(newExpense);
 
-      await UpsideDb.SaveChangesAsync();
+      await _context.SaveChangesAsync();
 
       return new ContentResult()
       {
