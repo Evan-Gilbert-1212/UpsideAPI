@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -26,14 +27,23 @@ namespace UpsideAPI.Controllers
     }
 
     [HttpGet("usersummary/{userId}")]
-    public ActionResult GetUserSummary(int userId)
+    public ActionResult GetUserSummary(int userId, DateTime BeginDate, DateTime EndDate)
     {
       var summary = new UserSummary();
 
       summary.AccountBalance = UpsideDb.BankAccounts.Where(acct => acct.UserID == userId).Sum(acct => acct.AccountBalance);
       summary.CreditCardBalance = UpsideDb.CreditCards.Where(card => card.UserID == userId).Sum(card => card.AccountBalance);
-      summary.RevenueTotal = UpsideDb.Revenues.Where(rev => rev.UserID == userId).Sum(rev => rev.RevenueAmount);
-      summary.ExpenseTotal = UpsideDb.Expenses.Where(exp => exp.UserID == userId).Sum(exp => exp.ExpenseAmount);
+      summary.RevenueTotal = UpsideDb.Revenues
+                             .Where(rev =>
+                               rev.UserID == userId
+                               && rev.RevenueDate >= BeginDate
+                               && rev.RevenueDate <= EndDate)
+                             .Sum(rev => rev.RevenueAmount);
+      summary.ExpenseTotal = UpsideDb.Expenses
+                             .Where(exp =>
+                               exp.UserID == userId
+                               && exp.ExpenseDate >= BeginDate
+                               && exp.ExpenseDate <= EndDate).Sum(exp => exp.ExpenseAmount);
 
       return new ContentResult()
       {

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UpsideAPI.Models;
 using Newtonsoft.Json;
+using System;
 
 namespace UpsideAPI.Controllers
 {
@@ -14,11 +15,16 @@ namespace UpsideAPI.Controllers
     public DatabaseContext UpsideDb = new DatabaseContext();
 
     [HttpGet("{userId}")]
-    public ActionResult GetUserExpenses(int userId)
+    public ActionResult GetUserExpenses(int userId, DateTime BeginDate, DateTime EndDate)
     {
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(UpsideDb.Expenses.Where(exp => exp.UserID == userId)),
+        Content = JsonConvert.SerializeObject(UpsideDb.Expenses
+                                                .Where(exp =>
+                                                  exp.UserID == userId
+                                                  && exp.ExpenseDate >= BeginDate
+                                                  && exp.ExpenseDate <= EndDate)
+                                                .OrderBy(exp => exp.ExpenseDate)),
         ContentType = "application/json",
         StatusCode = 200
       };
