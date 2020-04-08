@@ -3,24 +3,29 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UpsideAPI.Models;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace UpsideAPI.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
   public class CreditCardController : ControllerBase
   {
-    private DatabaseContext _context;
+    private readonly DatabaseContext _context;
 
     public CreditCardController(DatabaseContext context)
     {
       _context = context;
     }
 
-    [HttpGet("{userId}")]
-    public ActionResult GetUserCreditCards(int userId)
+    [HttpGet]
+    public ActionResult GetUserCreditCards()
     {
+      var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
+
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(_context.CreditCards.Where(acc => acc.UserID == userId)),
@@ -29,9 +34,11 @@ namespace UpsideAPI.Controllers
       };
     }
 
-    [HttpPost("{userId}")]
-    public async Task<ActionResult> AddUserCreditCard(CreditCard newCreditCard, int userId)
+    [HttpPost]
+    public async Task<ActionResult> AddUserCreditCard(CreditCard newCreditCard)
     {
+      var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
+
       newCreditCard.UserID = userId;
 
       _context.CreditCards.Add(newCreditCard);

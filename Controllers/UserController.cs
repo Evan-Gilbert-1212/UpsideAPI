@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using UpsideAPI.Models;
@@ -10,19 +11,22 @@ namespace UpsideAPI.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
   public class UserController : ControllerBase
   {
-    private DatabaseContext _context;
+    private readonly DatabaseContext _context;
 
     public UserController(DatabaseContext context)
     {
       _context = context;
     }
 
-    [HttpGet("{userId}")]
-    public ActionResult GetUser(int userId)
+    [HttpGet]
+    public ActionResult GetUser()
     {
+      var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
+
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(_context.Users.Where(user => user.ID == userId)),
@@ -31,9 +35,11 @@ namespace UpsideAPI.Controllers
       };
     }
 
-    [HttpGet("usersummary/{userId}")]
-    public ActionResult GetUserSummary(int userId, DateTime BeginDate, DateTime EndDate)
+    [HttpGet("usersummary")]
+    public ActionResult GetUserSummary(DateTime BeginDate, DateTime EndDate)
     {
+      var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
+
       var summary = new UserSummary();
 
       summary.AccountBalance = _context.BankAccounts.Where(acct => acct.UserID == userId).Sum(acct => acct.AccountBalance);
@@ -55,21 +61,6 @@ namespace UpsideAPI.Controllers
         Content = JsonConvert.SerializeObject(summary),
         ContentType = "application/json",
         StatusCode = 200,
-      };
-    }
-
-    [HttpPost]
-    public async Task<ActionResult> AddUser(User newUser)
-    {
-      await _context.Users.AddAsync(newUser);
-
-      await _context.SaveChangesAsync();
-
-      return new ContentResult()
-      {
-        Content = JsonConvert.SerializeObject(newUser),
-        ContentType = "application/json",
-        StatusCode = 201
       };
     }
   }

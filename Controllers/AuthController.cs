@@ -1,5 +1,6 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,10 +16,11 @@ namespace UpsideAPI.Controllers
 {
   [Route("auth")]
   [ApiController]
+
   public class AuthController : ControllerBase
   {
-    readonly private DatabaseContext _context;
-    readonly private string JWT_KEY;
+    private readonly DatabaseContext _context;
+    private readonly string JWT_KEY;
 
     public AuthController(DatabaseContext context, IConfiguration config)
     {
@@ -55,7 +57,14 @@ namespace UpsideAPI.Controllers
     [HttpPost("signup")]
     public async Task<ActionResult> SignUpUser(IncomingUserData userData)
     {
-      //User Name Validation
+      //User Name Validation      
+      var userExists = _context.Users.Any(user => user.UserName == userData.UserName);
+
+      if (userExists)
+      {
+        return BadRequest("User Name already in use");
+      }
+
       if (userData.UserName == "")
       {
         return BadRequest("User Name cannot be blank");
@@ -90,15 +99,19 @@ namespace UpsideAPI.Controllers
     [HttpPost("login")]
     public async Task<ActionResult> LoginUser(IncomingLoginData loginData)
     {
+      //Locate Account
       var userAccount = await _context.Users.FirstOrDefaultAsync(user => user.UserName == loginData.UserName);
 
+      //If Account Not Located
       if (userAccount == null)
       {
         return BadRequest("User does not exist.");
       }
 
+      //Verify Hashed Password
       var verifyResults = new PasswordHasher<User>().VerifyHashedPassword(userAccount, userAccount.HashedPassword, loginData.Password);
 
+      //If Verified, Log in. Else, inform use password is invalid
       if (verifyResults == PasswordVerificationResult.Success)
       {
         return Ok(new { Token = CreateJWT(userAccount), UserInfo = userAccount });
