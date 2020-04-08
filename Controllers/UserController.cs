@@ -42,6 +42,7 @@ namespace UpsideAPI.Controllers
 
       var summary = new UserSummary();
 
+      summary.FirstName = User.Claims.FirstOrDefault(claim => claim.Type == "FirstName").Value;
       summary.AccountBalance = _context.BankAccounts.Where(acct => acct.UserID == userId).Sum(acct => acct.AccountBalance);
       summary.CreditCardBalance = _context.CreditCards.Where(card => card.UserID == userId).Sum(card => card.AccountBalance);
       summary.RevenueTotal = _context.Revenues
