@@ -36,26 +36,63 @@ namespace UpsideAPI.Controllers
     }
 
     [HttpGet("usersummary")]
-    public ActionResult GetUserSummary(DateTime BeginDate, DateTime EndDate)
+    public ActionResult GetUserSummary()
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
       var summary = new UserSummary();
 
       summary.FirstName = User.Claims.FirstOrDefault(claim => claim.Type == "FirstName").Value;
-      summary.AccountBalance = _context.BankAccounts.Where(acct => acct.UserID == userId).Sum(acct => acct.AccountBalance);
-      summary.CreditCardBalance = _context.CreditCards.Where(card => card.UserID == userId).Sum(card => card.AccountBalance);
+
+      if (_context.Revenues.Any(rev => rev.RevenueDate <= DateTime.Now
+                                    && rev.RevenueCategory == "Wages"
+                                    && rev.UserID == userId))
+      {
+        summary.PeriodBeginDate = _context.Revenues
+                                  .Where(rev => rev.RevenueDate <= DateTime.Now
+                                      && rev.RevenueCategory == "Wages"
+                                      && rev.UserID == userId)
+                                  .Max(rev => rev.RevenueDate);
+      }
+      else
+      {
+        summary.PeriodBeginDate = DateTime.Now;
+      }
+
+      if (_context.Revenues.Any(rev => rev.RevenueDate > DateTime.Now
+                                    && rev.RevenueCategory == "Wages"
+                                    && rev.UserID == userId))
+      {
+        summary.PeriodEndDate = _context.Revenues
+                                .Where(rev => rev.RevenueDate > DateTime.Now
+                                    && rev.RevenueCategory == "Wages"
+                                    && rev.UserID == userId)
+                                .Min(rev => rev.RevenueDate).AddDays(-1);
+      }
+      else
+      {
+        summary.PeriodEndDate = DateTime.Now;
+      }
+
+      summary.AccountBalance = _context.BankAccounts
+                               .Where(acct => acct.UserID == userId)
+                               .Sum(acct => acct.AccountBalance);
+
+      summary.CreditCardBalance = _context.CreditCards
+                                  .Where(card => card.UserID == userId)
+                                  .Sum(card => card.AccountBalance);
+
       summary.RevenueTotal = _context.Revenues
-                             .Where(rev =>
-                               rev.UserID == userId
-                               && rev.RevenueDate >= BeginDate
-                               && rev.RevenueDate <= EndDate)
+                             .Where(rev => rev.UserID == userId
+                               && rev.RevenueDate >= summary.PeriodBeginDate
+                               && rev.RevenueDate <= summary.PeriodEndDate)
                              .Sum(rev => rev.RevenueAmount);
+
       summary.ExpenseTotal = _context.Expenses
-                             .Where(exp =>
-                               exp.UserID == userId
-                               && exp.ExpenseDate >= BeginDate
-                               && exp.ExpenseDate <= EndDate).Sum(exp => exp.ExpenseAmount);
+                             .Where(exp => exp.UserID == userId
+                               && exp.ExpenseDate >= summary.PeriodBeginDate
+                               && exp.ExpenseDate <= summary.PeriodEndDate)
+                             .Sum(exp => exp.ExpenseAmount);
 
       return new ContentResult()
       {

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UpsideAPI.Models;
@@ -9,9 +10,10 @@ using UpsideAPI.Models;
 namespace UpsideAPI.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20200409195325_Added Recurring Transactions Table")]
+    partial class AddedRecurringTransactionsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,9 +103,6 @@ namespace UpsideAPI.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<DateTime>("FirstPaymentDate")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<string>("RecurringFrequency")
                         .HasColumnType("text");
 
@@ -112,6 +111,9 @@ namespace UpsideAPI.Migrations
 
                     b.Property<string>("TransactionCategory")
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("TransactionName")
                         .HasColumnType("text");

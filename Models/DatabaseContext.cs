@@ -11,6 +11,7 @@ namespace UpsideAPI.Models
     public DbSet<CreditCard> CreditCards { get; set; }
     public DbSet<Expense> Expenses { get; set; }
     public DbSet<Revenue> Revenues { get; set; }
+    public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
 
     private string ConvertPostConnectionToConnectionString(string connection)
     {

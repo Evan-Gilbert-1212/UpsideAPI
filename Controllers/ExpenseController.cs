@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using UpsideAPI.ViewModels;
 
 namespace UpsideAPI.Controllers
 {
@@ -41,13 +42,36 @@ namespace UpsideAPI.Controllers
     }
 
     [HttpPost]
-    public async Task<ActionResult> AddUserExpense(Expense newExpense)
+    public async Task<ActionResult> AddUserExpense(IncomingExpenseData incomingExpense)
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
-      newExpense.UserID = userId;
+      var newExpense = new Expense
+      {
+        ExpenseCategory = incomingExpense.ExpenseCategory,
+        ExpenseName = incomingExpense.ExpenseName,
+        ExpenseDate = incomingExpense.ExpenseDate,
+        ExpenseAmount = incomingExpense.ExpenseAmount,
+        UserID = userId
+      };
 
       _context.Expenses.Add(newExpense);
+
+      if (incomingExpense.RecurringFrequency != "One Time")
+      {
+        var newRecurringTransaction = new RecurringTransaction
+        {
+          TransactionType = "Expense",
+          TransactionCategory = incomingExpense.ExpenseCategory,
+          TransactionName = incomingExpense.ExpenseName,
+          FirstPaymentDate = incomingExpense.ExpenseDate,
+          TransactionAmount = incomingExpense.ExpenseAmount,
+          RecurringFrequency = incomingExpense.RecurringFrequency,
+          UserID = userId
+        };
+
+        _context.RecurringTransactions.Add(newRecurringTransaction);
+      }
 
       await _context.SaveChangesAsync();
 

@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using UpsideAPI.ViewModels;
 
 namespace UpsideAPI.Controllers
 {
@@ -41,13 +42,36 @@ namespace UpsideAPI.Controllers
     }
 
     [HttpPost]
-    public async Task<ActionResult> AddUserRevenue(Revenue newRevenue)
+    public async Task<ActionResult> AddUserRevenue(IncomingRevenueData incomingRevenue)
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
-      newRevenue.UserID = userId;
+      var newRevenue = new Revenue
+      {
+        RevenueCategory = incomingRevenue.RevenueCategory,
+        RevenueName = incomingRevenue.RevenueName,
+        RevenueDate = incomingRevenue.RevenueDate,
+        RevenueAmount = incomingRevenue.RevenueAmount,
+        UserID = userId
+      };
 
       _context.Revenues.Add(newRevenue);
+
+      if (incomingRevenue.RecurringFrequency != "One Time")
+      {
+        var newRecurringTransaction = new RecurringTransaction
+        {
+          TransactionType = "Revenue",
+          TransactionCategory = incomingRevenue.RevenueCategory,
+          TransactionName = incomingRevenue.RevenueName,
+          FirstPaymentDate = incomingRevenue.RevenueDate,
+          TransactionAmount = incomingRevenue.RevenueAmount,
+          RecurringFrequency = incomingRevenue.RecurringFrequency,
+          UserID = userId
+        };
+
+        _context.RecurringTransactions.Add(newRecurringTransaction);
+      }
 
       await _context.SaveChangesAsync();
 
