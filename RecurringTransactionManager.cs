@@ -21,7 +21,63 @@ namespace UpsideAPI
         return dateToIncrement;
     }
 
-    public static void ProjectPayments(int userId)
+    public static void ProjectIndividualPayment(RecurringTransaction transaction)
+    {
+      var UpsideDb = new DatabaseContext();
+
+      var nextPaymentDate = IncrementDate(transaction.FirstPaymentDate, transaction.RecurringFrequency);
+      var endProjectionDate = DateTime.Now.AddYears(1);
+
+      //loop through transaction and project
+      while (nextPaymentDate <= endProjectionDate)
+      {
+        if (transaction.TransactionType == "Revenue")
+        {
+          //check if revenue already exists
+          if (!UpsideDb.Revenues.Any(rev => rev.RevenueCategory == transaction.TransactionCategory &&
+                                            rev.RevenueDate == nextPaymentDate))
+          {
+            //if not, add revenue to table
+            var newRevenue = new Revenue()
+            {
+              RevenueCategory = transaction.TransactionCategory,
+              RevenueName = transaction.TransactionName,
+              RevenueDate = nextPaymentDate,
+              RevenueAmount = transaction.TransactionAmount,
+              UserID = transaction.UserID
+            };
+
+            UpsideDb.Revenues.Add(newRevenue);
+          }
+        }
+        else if (transaction.TransactionType == "Expense")
+        {
+          //check if expense already exists
+          if (!UpsideDb.Expenses.Any(exp => exp.ExpenseCategory == transaction.TransactionCategory &&
+                                            exp.ExpenseDate == nextPaymentDate))
+          {
+            //if not, add expense to table
+            var newExpense = new Expense()
+            {
+              ExpenseCategory = transaction.TransactionCategory,
+              ExpenseName = transaction.TransactionName,
+              ExpenseDate = nextPaymentDate,
+              ExpenseAmount = transaction.TransactionAmount,
+              UserID = transaction.UserID
+            };
+
+            UpsideDb.Expenses.Add(newExpense);
+          }
+        }
+
+        //increment nextPaymentDate
+        nextPaymentDate = IncrementDate(nextPaymentDate, transaction.RecurringFrequency);
+      }
+
+      UpsideDb.SaveChanges();
+    }
+
+    public static void ProjectAllPayments(int userId)
     {
       //Establish database connection
       var UpsideDb = new DatabaseContext();
@@ -32,57 +88,8 @@ namespace UpsideAPI
       //Loop through all recurring transactions for a user
       foreach (var trans in transactionsToProject)
       {
-        var nextPaymentDate = IncrementDate(trans.FirstPaymentDate, trans.RecurringFrequency);
-        var endProjectionDate = DateTime.Now.AddYears(1);
-
-        //loop through each recurring transaction and project them
-        while (nextPaymentDate <= endProjectionDate)
-        {
-          if (trans.TransactionType == "Revenue")
-          {
-            //check if revenue already exists
-            if (!UpsideDb.Revenues.Any(rev => rev.RevenueCategory == trans.TransactionCategory &&
-                                              rev.RevenueDate == nextPaymentDate))
-            {
-              //if not, add revenue to table
-              var newRevenue = new Revenue()
-              {
-                RevenueCategory = trans.TransactionCategory,
-                RevenueName = trans.TransactionName,
-                RevenueDate = nextPaymentDate,
-                RevenueAmount = trans.TransactionAmount,
-                UserID = trans.UserID
-              };
-
-              UpsideDb.Revenues.Add(newRevenue);
-            }
-          }
-          else if (trans.TransactionType == "Expense")
-          {
-            //check if expense already exists
-            if (!UpsideDb.Expenses.Any(exp => exp.ExpenseCategory == trans.TransactionCategory &&
-                                              exp.ExpenseDate == nextPaymentDate))
-            {
-              //if not, add expense to table
-              var newExpense = new Expense()
-              {
-                ExpenseCategory = trans.TransactionCategory,
-                ExpenseName = trans.TransactionName,
-                ExpenseDate = nextPaymentDate,
-                ExpenseAmount = trans.TransactionAmount,
-                UserID = trans.UserID
-              };
-
-              UpsideDb.Expenses.Add(newExpense);
-            }
-          }
-
-          //increment nextPaymentDate
-          nextPaymentDate = IncrementDate(nextPaymentDate, trans.RecurringFrequency);
-        }
+        ProjectIndividualPayment(trans);
       }
-
-      UpsideDb.SaveChanges();
     }
   }
 }

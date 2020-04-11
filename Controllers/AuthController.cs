@@ -114,7 +114,7 @@ namespace UpsideAPI.Controllers
       //If Verified, Log in. Else, inform use password is invalid
       if (verifyResults == PasswordVerificationResult.Success)
       {
-        RecurringTransactionManager.ProjectPayments(userAccount.ID);
+        RecurringTransactionManager.ProjectAllPayments(userAccount.ID);
 
         return Ok(new { Token = CreateJWT(userAccount), UserInfo = userAccount });
       }

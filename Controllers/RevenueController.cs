@@ -24,7 +24,7 @@ namespace UpsideAPI.Controllers
     }
 
     [HttpGet]
-    public ActionResult GetUserRevenues(DateTime BeginDate, DateTime EndDate)
+    public ActionResult GetUserRevenuesForPeriod(DateTime BeginDate, DateTime EndDate)
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
@@ -35,6 +35,21 @@ namespace UpsideAPI.Controllers
                                                   rev.UserID == userId
                                                   && rev.RevenueDate >= BeginDate
                                                   && rev.RevenueDate <= EndDate)
+                                                .OrderBy(rev => rev.RevenueDate)),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
+    [HttpGet("all")]
+    public ActionResult GetAllUserRevenues()
+    {
+      var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(_context.Revenues
+                                                .Where(rev => rev.UserID == userId)
                                                 .OrderBy(rev => rev.RevenueDate)),
         ContentType = "application/json",
         StatusCode = 200
@@ -71,6 +86,8 @@ namespace UpsideAPI.Controllers
         };
 
         _context.RecurringTransactions.Add(newRecurringTransaction);
+
+        RecurringTransactionManager.ProjectIndividualPayment(newRecurringTransaction);
       }
 
       await _context.SaveChangesAsync();
