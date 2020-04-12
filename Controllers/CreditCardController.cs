@@ -5,6 +5,7 @@ using UpsideAPI.Models;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 
 namespace UpsideAPI.Controllers
 {
@@ -34,6 +35,20 @@ namespace UpsideAPI.Controllers
       };
     }
 
+    [HttpPut]
+    public async Task<ActionResult> UpdateUserCreditCard(CreditCard cardToUpdate)
+    {
+      _context.Entry(cardToUpdate).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(cardToUpdate),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
     [HttpPost]
     public async Task<ActionResult> AddUserCreditCard(CreditCard newCreditCard)
     {
@@ -51,6 +66,16 @@ namespace UpsideAPI.Controllers
         ContentType = "application/json",
         StatusCode = 201
       };
+    }
+
+    [HttpDelete("{creditCardId}")]
+    public async Task<ActionResult> DeleteUserCreditCard(int creditCardId)
+    {
+      var creditCardToDelete = await _context.CreditCards.FirstOrDefaultAsync(card => card.ID == creditCardId);
+      _context.CreditCards.Remove(creditCardToDelete);
+      await _context.SaveChangesAsync();
+
+      return Ok();
     }
   }
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UpsideAPI.Models;
 
@@ -22,7 +23,7 @@ namespace UpsideAPI.Controllers
     }
 
     [HttpGet]
-    public ActionResult GetUserAccounts()
+    public ActionResult GetUserBankAccounts()
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
@@ -34,8 +35,22 @@ namespace UpsideAPI.Controllers
       };
     }
 
+    [HttpPut]
+    public async Task<ActionResult> UpdateUserBankAccount(BankAccount accountToUpdate)
+    {
+      _context.Entry(accountToUpdate).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(accountToUpdate),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
     [HttpPost]
-    public async Task<ActionResult> AddUserAccount(BankAccount newAccount)
+    public async Task<ActionResult> AddUserBankAccount(BankAccount newAccount)
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
@@ -51,6 +66,16 @@ namespace UpsideAPI.Controllers
         ContentType = "application/json",
         StatusCode = 201
       };
+    }
+
+    [HttpDelete("{bankAccountId}")]
+    public async Task<ActionResult> DeleteUserBankAccount(int bankAccountId)
+    {
+      var bankAccountToDelete = await _context.BankAccounts.FirstOrDefaultAsync(acc => acc.ID == bankAccountId);
+      _context.BankAccounts.Remove(bankAccountToDelete);
+      await _context.SaveChangesAsync();
+
+      return Ok();
     }
   }
 }

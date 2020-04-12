@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UpsideAPI.Models;
 using UpsideAPI.ViewModels;
@@ -100,6 +102,30 @@ namespace UpsideAPI.Controllers
         ContentType = "application/json",
         StatusCode = 200,
       };
+    }
+
+    [HttpPut]
+    public async Task<ActionResult> UpdateUser(User userToUpdate)
+    {
+      _context.Entry(userToUpdate).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(userToUpdate),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
+    [HttpDelete("{userId}")]
+    public async Task<ActionResult> DeleteUser(int userId)
+    {
+      var userToDelete = await _context.Users.FirstOrDefaultAsync(user => user.ID == userId);
+      _context.Users.Remove(userToDelete);
+      await _context.SaveChangesAsync();
+
+      return Ok();
     }
   }
 }

@@ -7,6 +7,7 @@ using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using UpsideAPI.ViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace UpsideAPI.Controllers
 {
@@ -56,6 +57,20 @@ namespace UpsideAPI.Controllers
       };
     }
 
+    [HttpPut]
+    public async Task<ActionResult> UpdateUserRevenue(Revenue revenueToUpdate)
+    {
+      _context.Entry(revenueToUpdate).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(revenueToUpdate),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
     [HttpPost]
     public async Task<ActionResult> AddUserRevenue(IncomingRevenueData incomingRevenue)
     {
@@ -98,6 +113,16 @@ namespace UpsideAPI.Controllers
         ContentType = "application/json",
         StatusCode = 201
       };
+    }
+
+    [HttpDelete("{revenueId}")]
+    public async Task<ActionResult> DeleteUserRevenue(int revenueId)
+    {
+      var revenueToDelete = await _context.Revenues.FirstOrDefaultAsync(rev => rev.ID == revenueId);
+      _context.Revenues.Remove(revenueToDelete);
+      await _context.SaveChangesAsync();
+
+      return Ok();
     }
   }
 }

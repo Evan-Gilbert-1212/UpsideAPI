@@ -7,6 +7,7 @@ using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using UpsideAPI.ViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace UpsideAPI.Controllers
 {
@@ -56,6 +57,20 @@ namespace UpsideAPI.Controllers
       };
     }
 
+    [HttpPut]
+    public async Task<ActionResult> UpdateUserExpense(Expense expenseToUpdate)
+    {
+      _context.Entry(expenseToUpdate).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(expenseToUpdate),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
     [HttpPost]
     public async Task<ActionResult> AddUserExpense(IncomingExpenseData incomingExpense)
     {
@@ -98,6 +113,16 @@ namespace UpsideAPI.Controllers
         ContentType = "application/json",
         StatusCode = 201
       };
+    }
+
+    [HttpDelete("{expenseId}")]
+    public async Task<ActionResult> DeleteUserExpense(int expenseId)
+    {
+      var expenseToDelete = await _context.Expenses.FirstOrDefaultAsync(exp => exp.ID == expenseId);
+      _context.Expenses.Remove(expenseToDelete);
+      await _context.SaveChangesAsync();
+
+      return Ok();
     }
   }
 }
