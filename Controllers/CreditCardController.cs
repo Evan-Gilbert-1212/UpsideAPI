@@ -29,7 +29,9 @@ namespace UpsideAPI.Controllers
 
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(_context.CreditCards.Where(acc => acc.UserID == userId)),
+        Content = JsonConvert.SerializeObject(_context.CreditCards
+                                              .Where(card => card.UserID == userId)
+                                              .OrderBy(card => card.CardIssuer)),
         ContentType = "application/json",
         StatusCode = 200
       };
