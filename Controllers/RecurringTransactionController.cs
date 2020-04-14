@@ -44,6 +44,23 @@ namespace UpsideAPI.Controllers
       _context.Entry(transactionToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
+      //delete previous projections
+      if (transactionToUpdate.TransactionType == "Revenue")
+      {
+        var transactionsToDelete = _context.Revenues.Where(rev => rev.RecurringTransactionID == transactionToUpdate.ID).ToList();
+        _context.Revenues.RemoveRange(transactionsToDelete);
+      }
+      else
+      {
+        var transactionsToDelete = _context.Expenses.Where(exp => exp.RecurringTransactionID == transactionToUpdate.ID).ToList();
+        _context.Expenses.RemoveRange(transactionsToDelete);
+      }
+
+      await _context.SaveChangesAsync();
+
+      //re-project based on updated recurring transaction data
+      RecurringTransactionManager.ProjectIndividualPayment(transactionToUpdate);
+
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(transactionToUpdate),
@@ -56,7 +73,22 @@ namespace UpsideAPI.Controllers
     public async Task<ActionResult> DeleteUsersRecurringTransaction(int recurringTransId)
     {
       var transactionToDelete = await _context.RecurringTransactions.FirstOrDefaultAsync(trans => trans.ID == recurringTransId);
+
+      if (transactionToDelete.TransactionType == "Revenue")
+      {
+        var revenuesToDelete = _context.Revenues.Where(rev => rev.RecurringTransactionID == transactionToDelete.ID);
+
+        _context.Revenues.RemoveRange(revenuesToDelete);
+      }
+      else
+      {
+        var expensesToDelete = _context.Expenses.Where(exp => exp.RecurringTransactionID == transactionToDelete.ID);
+
+        _context.Expenses.RemoveRange(expensesToDelete);
+      }
+
       _context.RecurringTransactions.Remove(transactionToDelete);
+
       await _context.SaveChangesAsync();
 
       return Ok();

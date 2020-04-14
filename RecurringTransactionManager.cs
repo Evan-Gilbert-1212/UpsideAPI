@@ -25,7 +25,7 @@ namespace UpsideAPI
     {
       var UpsideDb = new DatabaseContext();
 
-      var nextPaymentDate = IncrementDate(transaction.FirstPaymentDate, transaction.RecurringFrequency);
+      var nextPaymentDate = transaction.FirstPaymentDate;
       var endProjectionDate = DateTime.Now.AddYears(1);
 
       //loop through transaction and project
@@ -35,7 +35,8 @@ namespace UpsideAPI
         {
           //check if revenue already exists
           if (!UpsideDb.Revenues.Any(rev => rev.RevenueCategory == transaction.TransactionCategory &&
-                                            rev.RevenueDate == nextPaymentDate))
+                                            rev.RevenueDate == nextPaymentDate &&
+                                            rev.UserID == transaction.UserID))
           {
             //if not, add revenue to table
             var newRevenue = new Revenue()
@@ -44,7 +45,8 @@ namespace UpsideAPI
               RevenueName = transaction.TransactionName,
               RevenueDate = nextPaymentDate,
               RevenueAmount = transaction.TransactionAmount,
-              UserID = transaction.UserID
+              UserID = transaction.UserID,
+              RecurringTransactionID = transaction.ID,
             };
 
             UpsideDb.Revenues.Add(newRevenue);
@@ -54,7 +56,8 @@ namespace UpsideAPI
         {
           //check if expense already exists
           if (!UpsideDb.Expenses.Any(exp => exp.ExpenseCategory == transaction.TransactionCategory &&
-                                            exp.ExpenseDate == nextPaymentDate))
+                                            exp.ExpenseDate == nextPaymentDate &&
+                                            exp.UserID == transaction.UserID))
           {
             //if not, add expense to table
             var newExpense = new Expense()
@@ -63,7 +66,8 @@ namespace UpsideAPI
               ExpenseName = transaction.TransactionName,
               ExpenseDate = nextPaymentDate,
               ExpenseAmount = transaction.TransactionAmount,
-              UserID = transaction.UserID
+              UserID = transaction.UserID,
+              RecurringTransactionID = transaction.ID,
             };
 
             UpsideDb.Expenses.Add(newExpense);

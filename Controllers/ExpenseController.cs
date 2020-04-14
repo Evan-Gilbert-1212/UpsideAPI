@@ -85,8 +85,6 @@ namespace UpsideAPI.Controllers
         UserID = userId
       };
 
-      _context.Expenses.Add(newExpense);
-
       if (incomingExpense.RecurringFrequency != "One Time")
       {
         var newRecurringTransaction = new RecurringTransaction
@@ -102,10 +100,18 @@ namespace UpsideAPI.Controllers
 
         _context.RecurringTransactions.Add(newRecurringTransaction);
 
-        RecurringTransactionManager.ProjectIndividualPayment(newRecurringTransaction);
-      }
+        await _context.SaveChangesAsync();
 
-      await _context.SaveChangesAsync();
+        RecurringTransactionManager.ProjectIndividualPayment(newRecurringTransaction);
+
+        newExpense.RecurringTransactionID = newRecurringTransaction.ID;
+      }
+      else
+      {
+        _context.Expenses.Add(newExpense);
+
+        await _context.SaveChangesAsync();
+      }
 
       return new ContentResult()
       {

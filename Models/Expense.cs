@@ -11,6 +11,7 @@ namespace UpsideAPI.Models
     public DateTime ExpenseDate { get; set; }
     public double ExpenseAmount { get; set; }
     public int UserID { get; set; }
+    public int? RecurringTransactionID { get; set; }
 
     [JsonIgnore]
     public User User { get; set; }
