@@ -60,6 +60,16 @@ namespace UpsideAPI.Controllers
     [HttpPut]
     public async Task<ActionResult> UpdateUserRevenue(Revenue revenueToUpdate)
     {
+      if (revenueToUpdate.RevenueDate == DateTime.Parse("01/01/1970"))
+      {
+        return BadRequest("Receipt Date cannot be blank.");
+      }
+
+      if (revenueToUpdate.RevenueAmount == 0)
+      {
+        return BadRequest("Amount must be greater than 0.");
+      }
+
       _context.Entry(revenueToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 

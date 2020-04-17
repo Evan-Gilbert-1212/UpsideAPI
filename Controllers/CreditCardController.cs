@@ -40,6 +40,11 @@ namespace UpsideAPI.Controllers
     [HttpPut]
     public async Task<ActionResult> UpdateUserCreditCard(CreditCard cardToUpdate)
     {
+      if (cardToUpdate.CardIssuer == "")
+      {
+        return BadRequest("Credit Card Issuer cannot be blank.");
+      }
+
       _context.Entry(cardToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 

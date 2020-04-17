@@ -60,6 +60,16 @@ namespace UpsideAPI.Controllers
     [HttpPut]
     public async Task<ActionResult> UpdateUserExpense(Expense expenseToUpdate)
     {
+      if (expenseToUpdate.ExpenseDate == DateTime.Parse("01/01/1970"))
+      {
+        return BadRequest("Due Date cannot be blank.");
+      }
+
+      if (expenseToUpdate.ExpenseAmount == 0)
+      {
+        return BadRequest("Amount must be greater than 0.");
+      }
+
       _context.Entry(expenseToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
