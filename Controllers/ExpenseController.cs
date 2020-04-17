@@ -74,14 +74,14 @@ namespace UpsideAPI.Controllers
     [HttpPost]
     public async Task<ActionResult> AddUserExpense(IncomingExpenseData incomingExpense)
     {
-      if (incomingExpense.ExpenseDate == null)
+      if (incomingExpense.ExpenseDate == DateTime.Parse("01/01/1970"))
       {
-        return BadRequest("Expense Date cannot be blank.");
+        return BadRequest("Due Date cannot be blank.");
       }
 
       if (incomingExpense.ExpenseAmount == 0)
       {
-        return BadRequest("Expense Amount must be greater than 0.");
+        return BadRequest("Amount must be greater than 0.");
       }
 
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
