@@ -74,6 +74,16 @@ namespace UpsideAPI.Controllers
     [HttpPost]
     public async Task<ActionResult> AddUserRevenue(IncomingRevenueData incomingRevenue)
     {
+      if (incomingRevenue.RevenueDate == null)
+      {
+        return BadRequest("Receipt Date cannot be blank.");
+      }
+
+      if (incomingRevenue.RevenueAmount == 0)
+      {
+        return BadRequest("Revenue Amount must be greater than 0.");
+      }
+
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
       var newRevenue = new Revenue

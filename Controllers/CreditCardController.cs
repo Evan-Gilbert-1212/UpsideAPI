@@ -54,6 +54,11 @@ namespace UpsideAPI.Controllers
     [HttpPost]
     public async Task<ActionResult> AddUserCreditCard(CreditCard newCreditCard)
     {
+      if (newCreditCard.CardIssuer == "")
+      {
+        return BadRequest("Credit Card Issuer cannot be blank.");
+      }
+
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
       newCreditCard.UserID = userId;
