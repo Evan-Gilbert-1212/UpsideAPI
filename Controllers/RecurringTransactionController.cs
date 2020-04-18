@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace UpsideAPI.Controllers
 {
@@ -41,6 +42,16 @@ namespace UpsideAPI.Controllers
     [HttpPut]
     public async Task<ActionResult> UpdateUsersRecurringTransaction(RecurringTransaction transactionToUpdate)
     {
+      if (transactionToUpdate.FirstPaymentDate == DateTime.Parse("01/01/1970"))
+      {
+        return BadRequest("Due Date cannot be blank.");
+      }
+
+      if (transactionToUpdate.TransactionAmount == 0)
+      {
+        return BadRequest("Amount must be greater than 0.");
+      }
+
       _context.Entry(transactionToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
