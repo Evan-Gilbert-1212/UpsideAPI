@@ -42,38 +42,48 @@ namespace UpsideAPI.Controllers
     {
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      var displayPeriod = _context.Users.Where(user => user.ID == userId).Select(user => user.DisplayPeriod).FirstOrDefault();
+
       var summary = new UserSummary();
 
       summary.FirstName = User.Claims.FirstOrDefault(claim => claim.Type == "FirstName").Value;
 
-      if (_context.Revenues.Any(rev => rev.RevenueDate <= DateTime.Now
-                                    && rev.RevenueCategory == "Wages"
-                                    && rev.UserID == userId))
+      if (displayPeriod == "Wages")
       {
-        summary.PeriodBeginDate = _context.Revenues
-                                  .Where(rev => rev.RevenueDate <= DateTime.Now
+        if (_context.Revenues.Any(rev => rev.RevenueDate <= DateTime.Now
+                                      && rev.RevenueCategory == "Wages"
+                                      && rev.UserID == userId))
+        {
+          summary.PeriodBeginDate = _context.Revenues
+                                    .Where(rev => rev.RevenueDate <= DateTime.Now
+                                        && rev.RevenueCategory == "Wages"
+                                        && rev.UserID == userId)
+                                    .Max(rev => rev.RevenueDate);
+        }
+        else
+        {
+          summary.PeriodBeginDate = DateTime.Now;
+        }
+
+        if (_context.Revenues.Any(rev => rev.RevenueDate > DateTime.Now
+                                      && rev.RevenueCategory == "Wages"
+                                      && rev.UserID == userId))
+        {
+          summary.PeriodEndDate = _context.Revenues
+                                  .Where(rev => rev.RevenueDate > DateTime.Now
                                       && rev.RevenueCategory == "Wages"
                                       && rev.UserID == userId)
-                                  .Max(rev => rev.RevenueDate);
+                                  .Min(rev => rev.RevenueDate).AddDays(-1);
+        }
+        else
+        {
+          summary.PeriodEndDate = DateTime.Now;
+        }
       }
-      else
+      else if (displayPeriod == "Monthly")
       {
-        summary.PeriodBeginDate = DateTime.Now;
-      }
-
-      if (_context.Revenues.Any(rev => rev.RevenueDate > DateTime.Now
-                                    && rev.RevenueCategory == "Wages"
-                                    && rev.UserID == userId))
-      {
-        summary.PeriodEndDate = _context.Revenues
-                                .Where(rev => rev.RevenueDate > DateTime.Now
-                                    && rev.RevenueCategory == "Wages"
-                                    && rev.UserID == userId)
-                                .Min(rev => rev.RevenueDate).AddDays(-1);
-      }
-      else
-      {
-        summary.PeriodEndDate = DateTime.Now;
+        summary.PeriodBeginDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        summary.PeriodEndDate = summary.PeriodBeginDate.AddMonths(1).AddDays(-1);
       }
 
       summary.AccountBalance = _context.BankAccounts
@@ -108,6 +118,25 @@ namespace UpsideAPI.Controllers
     public async Task<ActionResult> UpdateUser(User userToUpdate)
     {
       _context.Entry(userToUpdate).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return new ContentResult()
+      {
+        Content = JsonConvert.SerializeObject(userToUpdate),
+        ContentType = "application/json",
+        StatusCode = 200
+      };
+    }
+
+    [HttpPatch("updateperiod")]
+    public async Task<ActionResult> UpdateUserDisplayPeriod(User user)
+    {
+      var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
+
+      var userToUpdate = await _context.Users.Where(user => user.ID == userId).FirstOrDefaultAsync();
+
+      userToUpdate.DisplayPeriod = user.DisplayPeriod;
+
       await _context.SaveChangesAsync();
 
       return new ContentResult()
