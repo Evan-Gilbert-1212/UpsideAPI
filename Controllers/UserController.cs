@@ -31,7 +31,7 @@ namespace UpsideAPI.Controllers
 
       return new ContentResult()
       {
-        Content = JsonConvert.SerializeObject(_context.Users.Where(user => user.ID == userId)),
+        Content = JsonConvert.SerializeObject(_context.Users.Where(user => user.ID == userId).FirstOrDefault()),
         ContentType = "application/json",
         StatusCode = 200
       };

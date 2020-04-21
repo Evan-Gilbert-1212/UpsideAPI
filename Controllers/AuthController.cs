@@ -65,6 +65,11 @@ namespace UpsideAPI.Controllers
         return BadRequest("User Name already in use");
       }
 
+      if (userData.FirstName == "")
+      {
+        return BadRequest("First Name cannot be blank");
+      }
+
       if (userData.UserName == "")
       {
         return BadRequest("User Name cannot be blank");
