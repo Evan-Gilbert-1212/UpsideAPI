@@ -54,6 +54,44 @@ namespace UpsideAPI.Controllers
       return token;
     }
 
+    public class TokenVerifier
+    {
+      public string tokenToValidate { get; set; }
+    }
+
+    [HttpPost("verifytoken")]
+    public bool VerifyToken(TokenVerifier tokenVerifier)
+    {
+      var parameters = new TokenValidationParameters
+      {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(JWT_KEY))
+      };
+
+      var handler = new JwtSecurityTokenHandler();
+
+      SecurityToken validatedToken = new JwtSecurityToken();
+
+      try
+      {
+        handler.ValidateToken(tokenVerifier.tokenToValidate, parameters, out validatedToken);
+      }
+      catch (SecurityTokenException)
+      {
+        return false;
+      }
+      catch (System.ArgumentException)
+      {
+        return false;
+      }
+
+      return validatedToken != null;
+    }
+
     [HttpPost("signup")]
     public async Task<ActionResult> SignUpUser(IncomingUserData userData)
     {
