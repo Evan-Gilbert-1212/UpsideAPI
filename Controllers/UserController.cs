@@ -48,22 +48,6 @@ namespace UpsideAPI.Controllers
 
       summary.FirstName = User.Claims.FirstOrDefault(claim => claim.Type == "FirstName").Value;
 
-      var currentHour = DateTime.Now.Hour;
-
-      if (currentHour >= 5 && currentHour <= 11)
-      {
-        summary.TimeOfDay = "Morning";
-      }
-      else if (currentHour >= 12 && currentHour <= 16)
-      {
-        summary.TimeOfDay = "Afternoon";
-      }
-      else
-      {
-        summary.TimeOfDay = "Evening";
-      }
-
-
       if (displayPeriod == "Wages")
       {
         if (_context.Revenues.Any(rev => rev.RevenueDate <= DateTime.Now
