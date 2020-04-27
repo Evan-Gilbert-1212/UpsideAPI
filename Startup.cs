@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using UpsideAPI.Models;
+using UpsideAPI.Services;
 
 namespace UpsideAPI
 {
@@ -44,6 +45,8 @@ namespace UpsideAPI
           IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWT_KEY"]))
         };
       });
+
+      services.AddHostedService<UpsideHostedService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -27,8 +27,10 @@ namespace UpsideAPI.Controllers
     [HttpGet]
     public ActionResult GetUserRevenuesForPeriod(DateTime BeginDate, DateTime EndDate)
     {
+      //Get User ID from Claims
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      //Return all Revenues for associated User ID, within the date range, ordered by Revenue Date
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(_context.Revenues
@@ -45,8 +47,10 @@ namespace UpsideAPI.Controllers
     [HttpGet("all")]
     public ActionResult GetAllUserRevenues()
     {
+      //Get User ID from Claims
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      //Return all Revenues for associated User ID, ordered by Revenue Date
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(_context.Revenues
@@ -60,19 +64,19 @@ namespace UpsideAPI.Controllers
     [HttpPut]
     public async Task<ActionResult> UpdateUserRevenue(Revenue revenueToUpdate)
     {
-      if (revenueToUpdate.RevenueDate == DateTime.Parse("01/01/1970"))
-      {
-        return BadRequest("Receipt Date cannot be blank.");
-      }
-
+      //If Revenue Amount equals 0, return BadRequest. Revenues must be greater than 0.
       if (revenueToUpdate.RevenueAmount == 0)
       {
         return BadRequest("Amount must be greater than 0.");
       }
 
+      //Else, set state of incoming entry to "Modified"
       _context.Entry(revenueToUpdate).State = EntityState.Modified;
+
+      //Save changes
       await _context.SaveChangesAsync();
 
+      //Return updated Revenue
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(revenueToUpdate),
@@ -84,18 +88,16 @@ namespace UpsideAPI.Controllers
     [HttpPost]
     public async Task<ActionResult> AddUserRevenue(IncomingRevenueData incomingRevenue)
     {
-      if (incomingRevenue.RevenueDate == DateTime.Parse("01/01/1970"))
-      {
-        return BadRequest("Receipt Date cannot be blank.");
-      }
-
+      //If Revenue Amount equals 0, return BadRequest. Revenues must be greater than 0.
       if (incomingRevenue.RevenueAmount == 0)
       {
         return BadRequest("Amount must be greater than 0.");
       }
 
+      //Else, get User ID from Claims
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      //Create new Revenue
       var newRevenue = new Revenue
       {
         RevenueCategory = incomingRevenue.RevenueCategory,
@@ -105,6 +107,7 @@ namespace UpsideAPI.Controllers
         UserID = userId
       };
 
+      //If Revenue is recurring, create new Recurring Transaction and project it.
       if (incomingRevenue.RecurringFrequency != "One Time")
       {
         var newRecurringTransaction = new RecurringTransaction
@@ -126,6 +129,7 @@ namespace UpsideAPI.Controllers
 
         newRevenue.RecurringTransactionID = newRecurringTransaction.ID;
       }
+      //Else, save One Time Revenue record
       else
       {
         _context.Revenues.Add(newRevenue);
@@ -133,6 +137,7 @@ namespace UpsideAPI.Controllers
         await _context.SaveChangesAsync();
       }
 
+      //Return new Revenue
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(newRevenue),
@@ -144,10 +149,16 @@ namespace UpsideAPI.Controllers
     [HttpDelete("{revenueId}")]
     public async Task<ActionResult> DeleteUserRevenue(int revenueId)
     {
+      //Locate Revenue to delete by ID
       var revenueToDelete = await _context.Revenues.FirstOrDefaultAsync(rev => rev.ID == revenueId);
+
+      //Remove Revenue from table
       _context.Revenues.Remove(revenueToDelete);
+
+      //Save changes
       await _context.SaveChangesAsync();
 
+      //Return OK
       return Ok();
     }
   }

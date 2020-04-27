@@ -29,15 +29,25 @@ namespace UpsideAPI
 
       UpsideDb.BankAccounts.Add(savingsAcct);
 
-      //Add a Credit Card
-      var creditCard = new CreditCard
+      //Add Bank of America Credit Card
+      var bofACard = new CreditCard
       {
         CardIssuer = "Bank of America",
         AccountBalance = 549.70,
         UserID = userID
       };
 
-      UpsideDb.CreditCards.Add(creditCard);
+      UpsideDb.CreditCards.Add(bofACard);
+
+      //Add Citibank Credit Card
+      var citiCard = new CreditCard
+      {
+        CardIssuer = "Citibank",
+        AccountBalance = 357.65,
+        UserID = userID
+      };
+
+      UpsideDb.CreditCards.Add(citiCard);
 
       //Add Recurring Wages
       var firstSalaryPayment = new RecurringTransaction

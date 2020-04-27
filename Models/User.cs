@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -10,6 +11,8 @@ namespace UpsideAPI.Models
     public string LastName { get; set; }
     public string UserName { get; set; }
     public string DisplayPeriod { get; set; }
+    public bool IsDemoAccount { get; set; }
+    public DateTime AccountCreatedTime { get; set; } = DateTime.Now;
 
     [JsonIgnore]
     public string HashedPassword { get; set; }

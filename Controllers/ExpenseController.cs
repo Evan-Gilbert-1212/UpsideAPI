@@ -27,8 +27,10 @@ namespace UpsideAPI.Controllers
     [HttpGet]
     public ActionResult GetUserExpensesForPeriod(DateTime BeginDate, DateTime EndDate)
     {
+      //Get User ID from Claims
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      //Return all Expenses for associated User ID, within the date range, ordered by ExpenseDate 
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(_context.Expenses
@@ -45,8 +47,10 @@ namespace UpsideAPI.Controllers
     [HttpGet("all")]
     public ActionResult GetAllUserExpenses()
     {
+      //Get User ID from Claims
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      //Return all Expenses for associated User ID, ordered by ExpenseDate
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(_context.Expenses
@@ -60,19 +64,19 @@ namespace UpsideAPI.Controllers
     [HttpPut]
     public async Task<ActionResult> UpdateUserExpense(Expense expenseToUpdate)
     {
-      if (expenseToUpdate.ExpenseDate == DateTime.Parse("01/01/1970"))
-      {
-        return BadRequest("Due Date cannot be blank.");
-      }
-
+      //If Expense Amount is 0, return BadRequest. Expenses must be greater than 0.
       if (expenseToUpdate.ExpenseAmount == 0)
       {
         return BadRequest("Amount must be greater than 0.");
       }
 
+      //Else, set state of incoming entry to "Modified"
       _context.Entry(expenseToUpdate).State = EntityState.Modified;
+
+      //Save changes
       await _context.SaveChangesAsync();
 
+      //Return updated Expense
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(expenseToUpdate),
@@ -84,18 +88,16 @@ namespace UpsideAPI.Controllers
     [HttpPost]
     public async Task<ActionResult> AddUserExpense(IncomingExpenseData incomingExpense)
     {
-      if (incomingExpense.ExpenseDate == DateTime.Parse("01/01/1970"))
-      {
-        return BadRequest("Due Date cannot be blank.");
-      }
-
+      //If Expense Amount equals 0, return BadRequest. Expenses must be greater than 0.
       if (incomingExpense.ExpenseAmount == 0)
       {
         return BadRequest("Amount must be greater than 0.");
       }
 
+      //Else, get User ID from Claims
       var userId = int.Parse(User.Claims.FirstOrDefault(claim => claim.Type == "ID").Value);
 
+      //Create new expense
       var newExpense = new Expense
       {
         ExpenseCategory = incomingExpense.ExpenseCategory,
@@ -105,6 +107,7 @@ namespace UpsideAPI.Controllers
         UserID = userId
       };
 
+      //If Expense is recurring, create new Recurring Transaction and project it.
       if (incomingExpense.RecurringFrequency != "One Time")
       {
         var newRecurringTransaction = new RecurringTransaction
@@ -126,6 +129,7 @@ namespace UpsideAPI.Controllers
 
         newExpense.RecurringTransactionID = newRecurringTransaction.ID;
       }
+      //Else, save One Time Expense record
       else
       {
         _context.Expenses.Add(newExpense);
@@ -133,6 +137,7 @@ namespace UpsideAPI.Controllers
         await _context.SaveChangesAsync();
       }
 
+      //Return new Expense
       return new ContentResult()
       {
         Content = JsonConvert.SerializeObject(newExpense),
@@ -144,10 +149,16 @@ namespace UpsideAPI.Controllers
     [HttpDelete("{expenseId}")]
     public async Task<ActionResult> DeleteUserExpense(int expenseId)
     {
+      //Locate Expense to delete by ID
       var expenseToDelete = await _context.Expenses.FirstOrDefaultAsync(exp => exp.ID == expenseId);
+
+      //Remove Expense from table
       _context.Expenses.Remove(expenseToDelete);
+
+      //Save changes
       await _context.SaveChangesAsync();
 
+      //Return OK
       return Ok();
     }
   }
