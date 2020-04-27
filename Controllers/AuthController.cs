@@ -166,5 +166,37 @@ namespace UpsideAPI.Controllers
         return BadRequest("Password does not match.");
       }
     }
+
+    [HttpPost("createdemouser")]
+    public async Task<ActionResult> CreateDemoUser()
+    {
+      //Hash Password
+      var newUser = new User
+      {
+        FirstName = "Guest",
+        LastName = "User",
+      };
+
+      var demoUserID = 1;
+
+      while (_context.Users.Any(user => user.UserName == "demo-user-" + demoUserID.ToString()))
+      {
+        demoUserID++;
+      }
+
+      newUser.UserName = "demo-user-" + demoUserID.ToString();
+      newUser.HashedPassword = new PasswordHasher<User>().HashPassword(newUser, "Welcome");
+      newUser.DisplayPeriod = "Wages";
+
+      //Save User
+      _context.Users.Add(newUser);
+      await _context.SaveChangesAsync();
+
+      //Generate dummy data for userID
+      DemoDataManager.CreateDemoData(newUser.ID);
+
+      //Generate and return JWT Token  
+      return Ok(new { Token = CreateJWT(newUser), UserInfo = newUser });
+    }
   }
 }
