@@ -25,13 +25,13 @@ namespace UpsideAPI.Services
       _logger.LogInformation("Background Service is starting.");
 
       //Execute task once a day
-      _timer = new Timer(DoWork, null, TimeSpan.Zero,
+      _timer = new Timer(PerformMaintenance, null, TimeSpan.Zero,
           TimeSpan.FromDays(1));
 
       return Task.CompletedTask;
     }
 
-    private void DoWork(object state)
+    private void PerformMaintenance(object state)
     {
       _logger.LogInformation("Background Service is executing.");
 
@@ -46,6 +46,9 @@ namespace UpsideAPI.Services
       _context.Users.RemoveRange(accountsToDelete);
 
       _context.SaveChanges();
+
+      //Project Recurring Payments in the system
+      RecurringTransactionManager.ProjectAllPayments();
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

@@ -26,7 +26,7 @@ namespace UpsideAPI
       var UpsideDb = new DatabaseContext();
 
       var nextPaymentDate = transaction.FirstPaymentDate;
-      var endProjectionDate = DateTime.Now.AddYears(1);
+      var endProjectionDate = DateTime.Now.AddMonths(6);
 
       //loop through transaction and project
       while (nextPaymentDate <= endProjectionDate)
@@ -81,13 +81,13 @@ namespace UpsideAPI
       UpsideDb.SaveChanges();
     }
 
-    public static void ProjectAllPayments(int userId)
+    public static void ProjectAllPayments()
     {
       //Establish database connection
       var UpsideDb = new DatabaseContext();
 
       //Get recurring transactions for user
-      var transactionsToProject = UpsideDb.RecurringTransactions.Where(trans => trans.UserID == userId).ToList();
+      var transactionsToProject = UpsideDb.RecurringTransactions.ToList();
 
       //Loop through all recurring transactions for a user
       foreach (var trans in transactionsToProject)

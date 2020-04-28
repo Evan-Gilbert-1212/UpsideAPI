@@ -170,8 +170,6 @@ namespace UpsideAPI.Controllers
       //If verified, log in. Else, return BadRequest
       if (verifyResults == PasswordVerificationResult.Success)
       {
-        RecurringTransactionManager.ProjectAllPayments(userAccount.ID);
-
         return Ok(new { Token = CreateJWT(userAccount), UserInfo = userAccount });
       }
       else
