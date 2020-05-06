@@ -63,8 +63,6 @@ namespace UpsideAPI
 
       UpsideDb.RecurringTransactions.Add(firstSalaryPayment);
 
-      RecurringTransactionManager.ProjectIndividualPayment(firstSalaryPayment);
-
       var secondSalaryPayment = new RecurringTransaction
       {
         TransactionType = "Revenue",
@@ -77,8 +75,6 @@ namespace UpsideAPI
       };
 
       UpsideDb.RecurringTransactions.Add(secondSalaryPayment);
-
-      RecurringTransactionManager.ProjectIndividualPayment(secondSalaryPayment);
 
       //Add 2 one time expenses and 2 recurring expenses for next 2 periods
       var groceries = new Expense
@@ -138,7 +134,6 @@ namespace UpsideAPI
 
       UpsideDb.RecurringTransactions.Add(rent);
 
-      RecurringTransactionManager.ProjectIndividualPayment(rent);
 
       var cellPhoneBill = new RecurringTransaction
       {
@@ -153,7 +148,6 @@ namespace UpsideAPI
 
       UpsideDb.RecurringTransactions.Add(cellPhoneBill);
 
-      RecurringTransactionManager.ProjectIndividualPayment(cellPhoneBill);
 
       var internetBill = new RecurringTransaction
       {
@@ -168,7 +162,6 @@ namespace UpsideAPI
 
       UpsideDb.RecurringTransactions.Add(internetBill);
 
-      RecurringTransactionManager.ProjectIndividualPayment(internetBill);
 
       var carInsurance = new RecurringTransaction
       {
@@ -183,9 +176,14 @@ namespace UpsideAPI
 
       UpsideDb.RecurringTransactions.Add(carInsurance);
 
-      RecurringTransactionManager.ProjectIndividualPayment(carInsurance);
-
       UpsideDb.SaveChanges();
+
+      RecurringTransactionManager.ProjectIndividualPayment(firstSalaryPayment);
+      RecurringTransactionManager.ProjectIndividualPayment(secondSalaryPayment);
+      RecurringTransactionManager.ProjectIndividualPayment(rent);
+      RecurringTransactionManager.ProjectIndividualPayment(cellPhoneBill);
+      RecurringTransactionManager.ProjectIndividualPayment(internetBill);
+      RecurringTransactionManager.ProjectIndividualPayment(carInsurance);
     }
   }
 }
